@@ -1,0 +1,11 @@
+{
+  "events": [
+    {
+      "id": "1",
+      "name": "Summer Dance Party",
+      "date": "2026-06-15T18:00:00Z",
+      "status": "upcoming",
+      "description": "Join us for the biggest Zumba party of the summer!"
+    }
+  ]
+}
