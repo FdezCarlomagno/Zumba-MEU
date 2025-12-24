@@ -47,10 +47,7 @@ export function ContactSection() {
   }
 
   return (
-    <section id="contact" className="py-20 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 overflow-hidden relative">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2 animate-blob"></div>
-      <div className="absolute top-0 right-0 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2 animate-blob animation-delay-2000"></div>
+    <section id="contact" className="py-8 overflow-hidden relative">
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-2xl mx-auto">
@@ -168,7 +165,7 @@ export function ContactSection() {
                     <Textarea
                       id="message"
                       placeholder={
-                        formData.eventType === "general-question" 
+                        formData.enquiryType === "general-question" 
                         ? "How can we help you?" 
                         : "Tell us a bit about the age group, number of kids, or specific requirements..."
                       }

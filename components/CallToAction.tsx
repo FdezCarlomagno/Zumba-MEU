@@ -28,9 +28,9 @@ const CTASection: React.FC = () => {
         // @ts-ignore
         const { isMobile } = context.conditions;
 
-        /* --------------------------------
-           SAFE INITIAL STATE (SIEMPRE VISIBLE)
-        -------------------------------- */
+        /* ===============================
+           RESET DURO → NADA INVISIBLE
+        =============================== */
         gsap.set([titleRef.current, subRef.current], {
           opacity: 1,
           y: 0,
@@ -52,42 +52,24 @@ const CTASection: React.FC = () => {
               end: "+=150%",
               scrub: 1.2,
               pin: true,
-              anticipatePin: 1,
             },
           });
 
           tl.fromTo(
             titleRef.current,
             { opacity: 0, y: 40 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 1,
-              ease: "power3.out",
-              immediateRender: false,
-            }
+            { opacity: 1, y: 0, ease: "power3.out" }
           )
             .fromTo(
               lineRef.current,
               { scaleX: 0 },
-              {
-                scaleX: 1,
-                duration: 0.8,
-                ease: "power2.inOut",
-                immediateRender: false,
-              },
+              { scaleX: 1, ease: "power2.inOut" },
               "-=0.4"
             )
             .fromTo(
               subRef.current,
               { opacity: 0, y: 30 },
-              {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: "power2.out",
-                immediateRender: false,
-              },
+              { opacity: 1, y: 0, ease: "power2.out" },
               "-=0.4"
             );
 
@@ -95,52 +77,38 @@ const CTASection: React.FC = () => {
         }
 
         /* =====================================================
-           MOBILE → FAKE PIN (SCROLL LARGO + SCRUB)
+           MOBILE → SIMPLE, VISIBLE, CONTROLADO
         ====================================================== */
         const tl = gsap.timeline({
-          scrollTrigger: {
+        scrollTrigger: {
             trigger: containerRef.current,
-            start: "top 85%",
-            end: "+=120%",
+            start: "top 80%",
+            end: "bottom 20%",
             scrub: 1,
-            pin: false, // 🚫 nunca pin real en mobile
-          },
+        },
         });
 
-        tl.fromTo(
-          titleRef.current,
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power3.out",
-            immediateRender: false,
-          }
-        )
-          .fromTo(
+        tl.to(titleRef.current, {
+        y: 0,
+        ease: "power3.out",
+        })
+        .to(
             lineRef.current,
-            { scaleX: 0 },
             {
-              scaleX: 1,
-              duration: 0.8,
-              ease: "power2.inOut",
-              immediateRender: false,
+            scaleX: 1,
+            ease: "power2.inOut",
             },
-            "-=0.4"
-          )
-          .fromTo(
+            "-=0.3"
+        )
+        .to(
             subRef.current,
-            { opacity: 0, y: 30 },
             {
-              opacity: 1,
-              y: 0,
-              duration: 0.8,
-              ease: "power2.out",
-              immediateRender: false,
+            y: 0,
+            ease: "power2.out",
             },
-            "-=0.4"
-          );
+            "-=0.3"
+        );
+
       }
     );
 
@@ -150,21 +118,35 @@ const CTASection: React.FC = () => {
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-screen flex items-center justify-center bg-white px-6 font-display overflow-hidden"
+      className="
+        relative w-full
+        py-16 md:h-screen
+        flex items-center justify-center
+        bg-white px-6 font-display
+      "
     >
-      <div className="max-w-6xl mx-auto text-center z-10">
+      <div className="max-w-6xl mx-auto text-center">
         <h2
           ref={titleRef}
-          className="text-[12vw] md:text-[8vw] font-black leading-[0.9] text-zinc-900 uppercase tracking-tighter"
+          className="
+            text-[12vw] md:text-[8vw]
+            font-black leading-[0.9]
+            text-zinc-900 uppercase tracking-tighter
+          "
         >
-          Let your body <span className="text-zinc-400 italic">move.</span>
+          Let your body{" "}
+          <span className="text-zinc-400 italic">move.</span>
           <br />
           Mind{" "}
           <span className="relative inline-block">
             breathe.
             <span
               ref={lineRef}
-              className="absolute left-0 bottom-[0%] w-full h-[6px] md:h-[12px] bg-yellow-400 -z-10"
+              className="
+                absolute left-0 bottom-0
+                w-full h-[6px] md:h-[12px]
+                bg-yellow-400 -z-10
+              "
             />
           </span>
         </h2>
@@ -174,7 +156,9 @@ const CTASection: React.FC = () => {
             This is your time to feel alive again.
             <br className="hidden md:block" />
             No pressure, no judgment,{" "}
-            <span className="text-zinc-900 font-bold">just pure energy.</span>
+            <span className="text-zinc-900 font-bold">
+              just pure energy.
+            </span>
           </p>
         </div>
       </div>

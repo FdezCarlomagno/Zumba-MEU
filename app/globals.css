@@ -132,7 +132,7 @@
   html {
     /* Fix overflow bugs for mobile */
     overflow-x: hidden;
-    overscroll-behavior: none;
+    /* overscroll-behavior: none; */
   }
 }
 

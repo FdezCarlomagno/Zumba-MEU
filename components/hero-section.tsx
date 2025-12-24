@@ -21,24 +21,30 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
   const heroRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const backgroundRef = useRef<HTMLDivElement>(null)
-  // Estado para el tamaño del contador
   const [timerSize, setTimerSize] = useState<"md" | "lg">("md")
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+    
     if (!heroRef.current || !contentRef.current || !backgroundRef.current) return
 
-    // Función para actualizar el tamaño según el ancho de pantalla
     const handleResize = () => {
-      if (window.innerWidth >= 640) { // 640px es el breakpoint 'sm' de Tailwind
+      if (window.innerWidth >= 640) {
         setTimerSize("lg")
       } else {
         setTimerSize("md")
       }
     }
 
-    // Ejecutar al montar y en cada resize
     handleResize()
     window.addEventListener("resize", handleResize)
+
+    // TRAMPA CRÍTICA: Primero hacemos visible el contenido
+    gsap.set(contentRef.current, {
+      opacity: 1,
+      y: 0
+    })
 
     // PIN DEL HERO
     ScrollTrigger.create({
@@ -47,7 +53,7 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
       end: "+=100%",
     })
 
-    // CORRECCIÓN: Animación de salida (fade out) para que el texto no se vaya a y:700
+    // Animación de salida (fade out)
     gsap.to(contentRef.current, {
       scrollTrigger: {
         trigger: heroRef.current,
@@ -55,8 +61,8 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
         end: "+=100%",
         scrub: 0.5,
       },
-      y: 700,      // Sube un poco en lugar de bajar 700px   // Escala sutilmente hacia abajo
-      opacity: 0,   // Desaparece al scrollear
+      y: 700,  // Reducido para mobile
+      opacity: 0,
       ease: "none",
     })
 
@@ -74,6 +80,71 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
     document.getElementById("services")?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Si no está montado, mostrar contenido básico visible
+  if (!isMounted) {
+    return (
+      <section
+        id="home"
+        ref={heroRef}
+        className="relative min-h-screen flex items-center justify-center overflow-hidden pt-12 pb-20"
+        data-theme="dark"
+      >
+        <div className="absolute inset-0 z-0">
+          <VideoBackground />
+        </div>
+        <div
+          ref={backgroundRef}
+          className="absolute inset-0 z-10 pointer-events-none animate-gradient"
+        />
+        <div
+          ref={contentRef}
+          className="relative z-20 container mx-auto px-4 text-center text-white max-w-6xl opacity-100"
+          style={{ opacity: 1 }}
+        >
+          {/* Contenido estático para el render inicial */}
+          {nextEvent && nextEvent.status === "upcoming" ? (
+            <>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-display mb-4 text-balance drop-shadow-2xl leading-tight">
+                Next Zumba Party Starts In...
+              </h1>
+              <div className="mb-5 flex justify-center">
+                <CountdownTimer targetDate={nextEvent.date} size={timerSize}/>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-6 text-balance font-display drop-shadow-lg">
+                {nextEvent.name}
+              </h2>
+            </>
+          ) : currentEvent ? (
+            <>
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold mb-10 text-balance drop-shadow-2xl leading-tight">
+                WE'RE LIVE NOW!
+              </h1>
+              <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl mb-12 text-balance font-display flex items-center justify-center gap-4 drop-shadow-lg">
+                <Sparkles className="h-6 w-6 sm:h-10 sm:w-10 animate-spin" />
+                Join the Party Right Now!
+                <Sparkles className="h-6 w-6 sm:h-10 sm:w-10 animate-spin" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-12">
+                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block">
+                  Dance.
+                </h1>
+                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block">
+                  Enjoy.
+                </h1>
+                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block">
+                  Celebrate.
+                </h1>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+    )
+  }
+
   // Case A: Upcoming event
   if (nextEvent && nextEvent.status === "upcoming") {
     return (
@@ -83,55 +154,59 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-12 pb-20"
         data-theme="dark"
       >
-           
-          {/* VIDEO */}
-          <div className="absolute inset-0 z-0">
-            <VideoBackground />
+        {/* VIDEO */}
+        <div className="absolute inset-0 z-0">
+          <VideoBackground />
+        </div>
+
+        {/* OVERLAY */}
+        <div
+          ref={backgroundRef}
+          className="absolute inset-0 z-10 pointer-events-none animate-gradient"
+        />
+
+        {/* CONTENT */}
+        <div
+          ref={contentRef}
+          className="relative z-20 container mx-auto px-4 text-center text-white max-w-6xl"
+          style={{ opacity: 1 }} // ESTILO INLINE CRÍTICO
+        >
+          {/* TRAMPA: Primero texto visible, luego animado por SplitText */}
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text="Next Zumba Party Starts In..."
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-display mb-4 text-balance drop-shadow-2xl leading-tight"
+              delay={50}
+              duration={0.3}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              textAlign="center"
+              onLetterAnimationComplete={() => {}}
+            />
           </div>
-
-          {/* OVERLAY */}
-          <div
-            ref={backgroundRef}
-            className="absolute inset-0 z-10 pointer-events-none animate-gradient"
-          />
-
-          {/* CONTENT */}
-          <div
-            ref={contentRef}
-            className="relative z-20 container mx-auto px-4 text-center text-white max-w-6xl"
-          >
-          
-          <SplitText
-            text="Next Zumba Party Starts In..."
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-display mb-4 text-balance drop-shadow-2xl leading-tight"
-            delay={50}
-            duration={0.3}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 40 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            textAlign="center"
-            onLetterAnimationComplete={() => {}}
-          />
 
           <div className="mb-5 flex justify-center">
             <CountdownTimer targetDate={nextEvent.date} size={timerSize}/>
           </div>
 
-          <SplitText
-            text={nextEvent.name}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-6 text-balance font-display drop-shadow-lg"
-            delay={100}
-            duration={0.7}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 40 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            textAlign="center"
-            onLetterAnimationComplete={() => {}}
-          />
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text={nextEvent.name}
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-6 text-balance font-display drop-shadow-lg"
+              delay={100}
+              duration={0.7}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              textAlign="center"
+              onLetterAnimationComplete={() => {}}
+            />
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
@@ -164,7 +239,7 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
         id="home"
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20"
-         data-theme="dark"
+        data-theme="dark"
       >
         <div
           ref={backgroundRef}
@@ -172,54 +247,60 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
         />
         <VideoBackground />
 
-        <div ref={contentRef} className="relative z-10 container mx-auto px-4 text-center text-white max-w-6xl">
-          <SplitText
-            text="WE'RE LIVE NOW!"
-            className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold mb-10 text-balance drop-shadow-2xl leading-tight"
-            delay={80}
-            duration={0.4}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 60 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            textAlign="center"
-            onLetterAnimationComplete={() => {}}
-          />
-
-          <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl mb-12 text-balance font-display flex items-center justify-center gap-4 drop-shadow-lg">
-            <Sparkles className="h-6 w-6 sm:h-10 sm:w-10 animate-spin" />
+        <div ref={contentRef} className="relative z-10 container mx-auto px-4 text-center text-white max-w-6xl"
+          style={{ opacity: 1 }} // ESTILO INLINE CRÍTICO
+        >
+          <div style={{ opacity: 1 }}>
             <SplitText
-              text="Join the Party Right Now!"
-              className="inline-block"
-              delay={40}
-              duration={0.3}
-              ease="power2.out"
-              splitType="words"
-              from={{ opacity: 0, y: -20 }}
+              text="WE'RE LIVE NOW!"
+              className="text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold mb-8 sm:mb-10 text-balance drop-shadow-2xl leading-tight"
+              delay={80}
+              duration={0.4}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
               to={{ opacity: 1, y: 0 }}
               threshold={0.1}
-              onLetterAnimationComplete={() => {}} 
+              textAlign="center"
+              onLetterAnimationComplete={() => {}}
             />
-            <Sparkles className="h-6 w-6 sm:h-10 sm:w-10 animate-spin" />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="text-lg sm:text-3xl md:text-4xl lg:text-5xl mb-8 sm:mb-12 text-balance font-display flex items-center justify-center gap-2 sm:gap-4 drop-shadow-lg">
+            <Sparkles className="h-5 w-5 sm:h-10 sm:w-10 animate-spin" />
+            <div style={{ opacity: 1 }}>
+              <SplitText
+                text="Join the Party Right Now!"
+                className="inline-block"
+                delay={40}
+                duration={0.3}
+                ease="power2.out"
+                splitType="words"
+                from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+                to={{ opacity: 1, y: 0 }}
+                threshold={0.1}
+                onLetterAnimationComplete={() => {}} 
+              />
+            </div>
+            <Sparkles className="h-5 w-5 sm:h-10 sm:w-10 animate-spin" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <Button
               size="lg"
               onClick={() => window.open("https://instagram.com", "_blank")}
-              className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 font-bold text-lg sm:text-xl px-8 sm:px-10 py-6 sm:py-7 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 border-4 border-white"
+              className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 font-bold text-base sm:text-xl px-6 sm:px-10 py-5 sm:py-7 rounded-full shadow-2xl hover:scale-105 sm:hover:scale-110 transition-all duration-300 border-2 sm:border-4 border-white"
             >
-              <Instagram className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+              <Instagram className="mr-2 h-4 w-4 sm:h-6 sm:w-6" />
               Follow on Instagram
-              <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6" />
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
             </Button>
             <Button
               size="lg"
               onClick={scrollToServices}
-              className="w-full sm:w-auto glass-strong text-white hover:scale-105 transition-all duration-300 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full border-2 border-white/40 shadow-xl"
+              className="w-full sm:w-auto glass-strong text-white hover:scale-105 transition-all duration-300 text-sm sm:text-lg px-4 sm:px-8 py-4 sm:py-6 rounded-full border-2 border-white/40 shadow-xl"
             >
-              <Calendar className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+              <Calendar className="mr-2 h-3 w-3 sm:h-5 sm:w-5" />
               See Next Events
             </Button>
           </div>
@@ -235,7 +316,7 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
         id="home"
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20"
-         data-theme="dark"
+        data-theme="dark"
       >
         <div
           ref={backgroundRef}
@@ -243,45 +324,51 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
         />
         <VideoBackground />
 
-        <div ref={contentRef} className="relative z-10 container mx-auto px-4 text-center text-white max-w-6xl">
-          <SplitText
-            text="That Was Epic!"
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 text-balance drop-shadow-2xl"
-            delay={60}
-            duration={0.3}
-            ease="power3.out"
-            splitType="words"
-            from={{ opacity: 0, y : -20 }}
-            to={{ opacity: 1, y : 0 }}
-            threshold={0.1}
-            textAlign="center"
-            onLetterAnimationComplete={() => {}}
-          />
+        <div ref={contentRef} className="relative z-10 container mx-auto px-4 text-center text-white max-w-6xl"
+          style={{ opacity: 1 }} // ESTILO INLINE CRÍTICO
+        >
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text="That Was Epic!"
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 sm:mb-8 text-balance drop-shadow-2xl"
+              delay={60}
+              duration={0.3}
+              ease="power3.out"
+              splitType="words"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              textAlign="center"
+              onLetterAnimationComplete={() => {}}
+            />
+          </div>
 
-          <SplitText
-            text="Next party in..."
-            className="text-2xl sm:text-3xl md:text-4xl mb-8 text-balance font-display drop-shadow-lg"
-            delay={40}
-            duration={0.25}
-            ease="power2.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 30 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            textAlign="center"
-            onLetterAnimationComplete={() => {}}
-          />
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text="Next party in..."
+              className="text-xl sm:text-3xl md:text-4xl mb-6 sm:mb-8 text-balance font-display drop-shadow-lg"
+              delay={40}
+              duration={0.25}
+              ease="power2.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              textAlign="center"
+              onLetterAnimationComplete={() => {}}
+            />
+          </div>
 
-          <div className="mb-10 flex justify-center">
+          <div className="mb-8 sm:mb-10 flex justify-center">
             <CountdownTimer targetDate={nextEvent.date} size={timerSize}/>
           </div>
 
           <Button
             size="lg"
             onClick={scrollToContact}
-            className="glass-strong text-white hover:scale-105 transition-all text-lg px-8 py-6 rounded-full border-2 border-white/40 shadow-2xl"
+            className="glass-strong text-white hover:scale-105 transition-all text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full border-2 border-white/40 shadow-2xl"
           >
-            <Calendar className="mr-2 h-5 w-5" />
+            <Calendar className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
             Book Now
           </Button>
         </div>
@@ -295,7 +382,7 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
       id="home"
       ref={heroRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20"
-       data-theme="dark"
+      data-theme="dark"
     >
       <div
         ref={backgroundRef}
@@ -303,63 +390,70 @@ export function HeroSection({ currentEvent, nextEvent }: HeroSectionProps) {
       />
       <VideoBackground />
 
-      <div ref={contentRef} className="relative z-10 container mx-auto px-4 text-center text-white max-w-6xl">
-        <div className="mb-12">
-          <SplitText
-            text="Dance."
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block"
-            delay={50}
-            duration={0.3}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 50 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            onLetterAnimationComplete={() => {}}
-
-          />
-          <SplitText
-            text="Enjoy."
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block"
-            delay={70}
-            duration={0.35}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 50 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            onLetterAnimationComplete={() => {}}
-          />
-          <SplitText
-            text="Celebrate."
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block"
-            delay={90}
-            duration={0.4}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 50 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            onLetterAnimationComplete={() => {}}
-          />
+      <div ref={contentRef} className="relative z-10 container mx-auto px-4 text-center text-white max-w-6xl"
+        style={{ opacity: 1 }} // ESTILO INLINE CRÍTICO
+      >
+        <div className="mb-8 sm:mb-12">
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text="Dance."
+              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block"
+              delay={50}
+              duration={0.3}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              onLetterAnimationComplete={() => {}}
+            />
+          </div>
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text="Enjoy."
+              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block"
+              delay={70}
+              duration={0.35}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              onLetterAnimationComplete={() => {}}
+            />
+          </div>
+          <div style={{ opacity: 1 }}>
+            <SplitText
+              text="Celebrate."
+              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-balance leading-tight drop-shadow-2xl block"
+              delay={90}
+              duration={0.4}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 1, y: 0 }} // CAMBIADO: de 0 a 1
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              onLetterAnimationComplete={() => {}}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
           <Button
             size="lg"
             onClick={scrollToContact}
-            className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 hover:from-yellow-500 hover:to-yellow-600 font-bold text-lg sm:text-xl px-8 sm:px-10 py-6 sm:py-7 rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
+            className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 hover:from-yellow-500 hover:to-yellow-600 font-bold text-base sm:text-xl px-6 sm:px-10 py-5 sm:py-7 rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
           >
-            <Calendar className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+            <Calendar className="mr-2 h-4 w-4 sm:h-6 sm:w-6" />
             Book a Party
-            <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6" />
+            <ArrowRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
           </Button>
           <Button
             size="lg"
             onClick={scrollToServices}
-            className="w-full sm:w-auto glass-strong text-white hover:scale-105 transition-all duration-300 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full border-2 border-white/40 shadow-xl"
+            className="w-full sm:w-auto glass-strong text-white hover:scale-105 transition-all duration-300 text-sm sm:text-lg px-4 sm:px-8 py-4 sm:py-6 rounded-full border-2 border-white/40 shadow-xl"
           >
-            <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <Sparkles className="mr-2 h-3 w-3 sm:h-5 sm:w-5" />
             See Services
           </Button>
         </div>

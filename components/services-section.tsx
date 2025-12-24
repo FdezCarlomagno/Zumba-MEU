@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { Button } from "@/components/ui/button"
 import { useMobile } from "@/hooks/use-mobile"
 import { ArrowRight } from "lucide-react"
+import { motion } from "framer-motion"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -165,30 +166,182 @@ export function ServicesSection() {
     })
   }, [activeImage, activeService, isMobile])
 
-  /* MOBILE */
+  /* MOBILE con animaciones Framer Motion */
   if (isMobile) {
+    // Variantes de animación para las cards
+    const cardVariants = {
+      hidden: { 
+        opacity: 0, 
+        y: 50,
+        scale: 0.9,
+        rotateX: 10
+      },
+      visible: { 
+        opacity: 1, 
+        y: 0,
+        scale: 1,
+        rotateX: 0,
+        transition: {
+          type: "spring",
+          stiffness: 100,
+          damping: 15,
+          mass: 0.8
+        }
+      }
+    }
+
+    // Variantes para la imagen
+    const imageVariants = {
+      hidden: { scale: 1.1, opacity: 0.7 },
+      visible: { 
+        scale: 1, 
+        opacity: 1,
+        transition: {
+          duration: 0.6,
+          ease: "easeOut"
+        }
+      }
+    }
+
+    // Variantes para el contenido
+    const contentVariants = {
+      hidden: { opacity: 0, y: 20 },
+      visible: { 
+        opacity: 1, 
+        y: 0,
+        transition: {
+          delay: 0.2,
+          duration: 0.4
+        }
+      }
+    }
+
+    // Variantes para el botón
+    const buttonVariants = {
+      hidden: { opacity: 0, scale: 0.8 },
+      visible: { 
+        opacity: 1, 
+        scale: 1,
+        transition: {
+          type: "spring",
+          stiffness: 200,
+          damping: 15,
+          delay: 0.3
+        }
+      },
+      hover: {
+        scale: 1.05,
+        transition: {
+          type: "spring",
+          stiffness: 400,
+          damping: 10
+        }
+      },
+      tap: {
+        scale: 0.95
+      }
+    }
+
     return (
-      <section className="py-24 px-6 space-y-24">
+      <section className="py-16 px-6 space-y-20">
         {services.map((service, i) => (
-          <div key={i} className="space-y-6">
-            <img
-              src={service.images[0]}
-              className="w-full h-[360px] object-cover rounded-xl"
-              alt={service.title}
+          <motion.div
+            key={i}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            variants={cardVariants}
+            className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl overflow-hidden"
+            style={{
+              // Asegurar visibilidad inicial
+              opacity: 1
+            }}
+          >
+            {/* Imagen con animación */}
+            <motion.div
+              variants={imageVariants}
+              className="relative overflow-hidden"
+            >
+              <motion.img
+                src={service.images[0]}
+                className="w-full h-[300px] object-cover"
+                alt={service.title}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              />
+              {/* Overlay gradiente */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              
+              {/* Badge de servicio */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="absolute top-4 left-4"
+              >
+                <span className="inline-block bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-black">
+                  Service {i + 1}
+                </span>
+              </motion.div>
+            </motion.div>
+
+            {/* Contenido con animación escalonada */}
+            <motion.div 
+              variants={contentVariants}
+              className="p-6 space-y-4"
+            >
+              <motion.h3 
+                className="text-2xl font-serif font-bold text-gray-900"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                {service.title}
+              </motion.h3>
+              
+              <motion.p 
+                className="text-gray-600 leading-relaxed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+              >
+                {service.description}
+              </motion.p>
+              
+              {/* Botón con animación */}
+              <motion.div
+                variants={buttonVariants}
+                initial="hidden"
+                animate="visible"
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Button className="w-full rounded-full px-8 py-6 text-lg bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg">
+                  <span>Book Now</span>
+                  <motion.span
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5, repeatDelay: 1 }}
+                  >
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </motion.span>
+                </Button>
+              </motion.div>
+            </motion.div>
+
+            {/* Elementos decorativos animados */}
+            <motion.div
+              className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
             />
-            <h3 className="text-3xl font-serif">{service.title}</h3>
-            <p className="text-neutral-600">{service.description}</p>
-            <Button className="w-full rounded-full px-8 py-6 text-lg">
-              Book Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
+          </motion.div>
         ))}
       </section>
     )
   }
 
-  /* DESKTOP */
+  /* DESKTOP - Mantenemos exactamente igual */
   return (
     <section
       ref={sectionRef}
